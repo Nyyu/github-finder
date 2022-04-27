@@ -1,16 +1,38 @@
-import { FaCodepen, FaUsers, FaStore, FaUserFriends } from "react-icons";
+import { FaCodepen, FaUsers, FaStore, FaUserFriends } from "react-icons/fa";
 import React, { useContext, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 
 import GithubContext from "../../Context/github/GithubContext";
+
+import { getUser, getUserRepos } from "../../Context/github/GithubActions";
+
+import RepoList from "../Repos/RepoList";
 import Spinner from "../Layout/Spinner";
 
 function Users() {
-    const { user, getUser, loading } = useContext(GithubContext);
+    const { user, loading, repos, dispatch } = useContext(GithubContext);
     const params = useParams();
     useEffect(() => {
-        getUser(params.login);
-    }, []);
+        const fetchUser = async () => {
+            dispatch({ type: "SET_LOADING", payload: { loading: true } });
+            const user = await getUser(params.login);
+            const repos = await getUserRepos(params.login);
+
+            dispatch({
+                type: "GET_USER",
+                payload: {
+                    user: user,
+                    loading: false,
+                },
+            });
+            dispatch({
+                type: "GET_USER_REPOS",
+                payload: repos,
+            });
+        };
+
+        fetchUser();
+    }, [dispatch, params.login]);
 
     const {
         name,
@@ -72,7 +94,7 @@ function Users() {
                                     )}
                                 </h1>
                                 <p className="mt-1">{bio}</p>
-                                <div className="mt-4 absolute bottom-3 card-actions">
+                                <div className="mt-4 card-actions">
                                     <a
                                         href={html_url}
                                         target="_blank"
@@ -83,8 +105,96 @@ function Users() {
                                     </a>
                                 </div>
                             </div>
+                            <div className="w-full rounded-lg shadow-md bg-base-100 stats">
+                                {location && (
+                                    <div className="stat">
+                                        <div className="stat-title text-md">
+                                            Location
+                                        </div>
+                                        <div className="text-lg stat-value">
+                                            {location}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {blog && (
+                                    <div className="stat">
+                                        <div className="stat-title text-md">
+                                            Website
+                                        </div>
+                                        <div className="text-lg stat-value">
+                                            <a
+                                                href={`https://${blog}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                {blog}
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {twitter_username && (
+                                    <div className="stat">
+                                        <div className="stat-title text-md">
+                                            Website
+                                        </div>
+                                        <div className="text-lg stat-value">
+                                            <a
+                                                href={`https://twitter.com/${twitter_username}`}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                            >
+                                                {twitter_username}
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </div>
+                    <div className="w-full py-5 mb-6 rounded-lg shadow-md bg-base-100 stats">
+                        <div className="stat">
+                            <div className="stat-figure text-secondary">
+                                <FaUsers className="text-3xl md:text-5xl" />
+                            </div>
+                            <div className="stat-title pr-5">Followers</div>
+                            <div className="stat-value pr-5 text-3xl md:text-4xl">
+                                {followers}
+                            </div>
+                        </div>
+
+                        <div className="stat">
+                            <div className="stat-figure text-secondary">
+                                <FaUserFriends className="text-3xl md:text-5xl" />
+                            </div>
+                            <div className="stat-title pr-5">Following</div>
+                            <div className="stat-value pr-5 text-3xl md:text-4xl">
+                                {following}
+                            </div>
+                        </div>
+
+                        <div className="stat">
+                            <div className="stat-figure text-secondary">
+                                <FaCodepen className="text-3xl md:text-5xl" />
+                            </div>
+                            <div className="stat-title pr-5">Public Repos</div>
+                            <div className="stat-value pr-5 text-3xl md:text-4xl">
+                                {public_repos}
+                            </div>
+                        </div>
+
+                        <div className="stat">
+                            <div className="stat-figure text-secondary">
+                                <FaStore className="text-3xl md:text-5xl" />
+                            </div>
+                            <div className="stat-title pr-5">Public Gists</div>
+                            <div className="stat-value pr-5 text-3xl md:text-4xl">
+                                {public_gists}
+                            </div>
+                        </div>
+                    </div>
+                    <RepoList repos={repos} />
                 </div>
             </>
         );
